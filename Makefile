@@ -39,6 +39,16 @@ C_SOURCES =  \
 Core/Src/main.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/stm32f4xx_hal_msp.c \
+Core/Src/clock.c \
+Core/Src/cdc.c \
+Core/Src/flash.c \
+Core/Src/fsmc_nand.c \
+Core/Src/jtag.c \
+Core/Src/led.c \
+Core/Src/nand_bad_block.c \
+Core/Src/nand_programmer.c \
+Core/Src/spi_flash.c \
+Core/Src/uart.c \
 USB_DEVICE/App/usb_device.c \
 USB_DEVICE/App/usbd_desc.c \
 USB_DEVICE/App/usbd_cdc_if.c \
@@ -62,6 +72,7 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_nand.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c \
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c \
 Core/Src/system_stm32f4xx.c \

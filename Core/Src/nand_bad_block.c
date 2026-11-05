@@ -19,6 +19,9 @@ void nand_bad_block_table_init()
 
 int nand_bad_block_table_add(uint32_t page)
 {
+    if (nand_bad_block_table_lookup(page))
+        return 0;
+
     if (nand_bad_block_table_count == NAND_BAD_BLOCK_TABLE_SIZE)
         return -1;
 

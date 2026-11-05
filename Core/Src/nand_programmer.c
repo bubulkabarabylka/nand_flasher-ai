@@ -18,6 +18,10 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+#ifndef PRIx64
+#define PRIx64 "llx"
+#endif
+
 #define NP_PACKET_BUF_SIZE 64
 #define NP_MAX_PAGE_SIZE 0x21C0 /* 8KB + 448 spare */
 #define NP_WRITE_ACK_BYTES 1984
@@ -258,6 +262,7 @@ static np_comm_cb_t *np_comm_cb;
 static np_prog_t prog_holder;
 
 static flash_hal_t *hal[] = { &hal_fsmc, &hal_spi };
+#define NP_HAL_COUNT (sizeof(hal) / sizeof(hal[0]))
 
 uint8_t np_packet_send_buf[NP_PACKET_BUF_SIZE];
 
@@ -517,7 +522,7 @@ static int _np_cmd_nand_erase(np_prog_t *prog)
         return NP_ERR_LEN_NOT_ALIGN;
     }
 
-    if (addr + len > total_size)
+    if (addr > total_size || len > total_size - addr)
     {
         ERROR_PRINT("Erase address exceded 0x%" PRIx64 "+0x%" PRIx64
             " is more then chip size 0x%" PRIx64 "\r\n", addr, len, total_size);
@@ -621,7 +626,7 @@ static int np_cmd_nand_write_start(np_prog_t *prog)
         prog->total_size = prog->chip_info.total_size;
     }
 
-    if (addr + len > prog->total_size)
+    if (addr > prog->total_size || len > prog->total_size - addr)
     {
         ERROR_PRINT("Write address 0x%" PRIx64 "+0x%" PRIx64
             " is more then chip size 0x%" PRIx64 "\r\n", addr, len,
@@ -745,13 +750,13 @@ static int np_cmd_nand_write_data(np_prog_t *prog)
 
     write_data_cmd = (np_write_data_cmd_t *)prog->rx_buf;
     len = write_data_cmd->len;
-    if (len + sizeof(np_write_data_cmd_t) > NP_PACKET_BUF_SIZE)
+    if (len > NP_PACKET_BUF_SIZE - sizeof(np_write_data_cmd_t))
     {
         ERROR_PRINT("Data size is wrong 0x%lx\r\n", len);
         return NP_ERR_CMD_DATA_SIZE;
     }
 
-    if (len + sizeof(np_write_data_cmd_t) != prog->rx_buf_len)
+    if (len != prog->rx_buf_len - sizeof(np_write_data_cmd_t))
     {
         ERROR_PRINT("Buffer len 0x%lx is bigger then command 0x%lx\r\n",
             prog->rx_buf_len, len + sizeof(np_write_data_cmd_t));
@@ -762,6 +767,13 @@ static int np_cmd_nand_write_data(np_prog_t *prog)
     {
         ERROR_PRINT("Write address is not set\r\n");
         return NP_ERR_ADDR_INVALID;
+    }
+
+    if (len > prog->len - prog->bytes_written)
+    {
+        ERROR_PRINT("Actual write data length 0x%lx is more then remaining 0x%" PRIx64 "\r\n",
+            len, prog->len - prog->bytes_written);
+        return NP_ERR_LEN_EXCEEDED;
     }
 
     if (prog->page.offset + len > prog->page_size)
@@ -882,10 +894,10 @@ static int np_nand_read(uint64_t addr, np_page_t *page, uint32_t page_size,
     case FLASH_STATUS_ERROR:
         if (np_send_bad_block_info(addr, block_size, false))
             return -1;
-        break;
+        return -1;
     case FLASH_STATUS_TIMEOUT:
         ERROR_PRINT("NAND write timeout at 0x%" PRIx64 "\r\n", addr);
-        break;
+        return -1;
     default:
         ERROR_PRINT("Unknown NAND status\r\n");
         return -1;
@@ -939,7 +951,7 @@ static int _np_cmd_nand_read(np_prog_t *prog)
         total_size = prog->chip_info.total_size;
     }
 
-    if (addr + len > total_size)
+    if (addr > total_size || len > total_size - addr)
     {
         ERROR_PRINT("Read address 0x%" PRIx64 "+0x%" PRIx64
             " is more then chip size 0x%" PRIx64 "\r\n", addr, len, total_size);
@@ -1092,6 +1104,19 @@ static int np_cmd_nand_conf(np_prog_t *prog)
 
     conf_cmd = (np_conf_cmd_t *)prog->rx_buf;
 
+    if (conf_cmd->hal >= NP_HAL_COUNT ||
+        !conf_cmd->page_size ||
+        !conf_cmd->block_size ||
+        !conf_cmd->total_size ||
+        conf_cmd->block_size % conf_cmd->page_size ||
+        conf_cmd->spare_size > NP_MAX_PAGE_SIZE ||
+        conf_cmd->page_size > NP_MAX_PAGE_SIZE - conf_cmd->spare_size ||
+        conf_cmd->bb_mark_off >= conf_cmd->spare_size)
+    {
+        ERROR_PRINT("Invalid chip configuration\r\n");
+        return NP_ERR_LEN_INVALID;
+    }
+
     np_fill_chip_info(conf_cmd, prog);
     np_print_chip_info(prog);
 
@@ -1236,7 +1261,9 @@ static int np_cmd_fw_update_start(np_prog_t *prog)
     prog->block_size = FLASH_BLOCK_SIZE;
     prog->total_size = FLASH_SIZE;
 
-    if (addr + len > prog->base_addr + prog->total_size)
+    if (addr < prog->base_addr ||
+        addr - prog->base_addr > prog->total_size ||
+        len > prog->total_size - (addr - prog->base_addr))
     {
         ERROR_PRINT("Write address 0x%" PRIx64 "+0x%" PRIx64
             " is more then flash size 0x%" PRIx64 "\r\n", addr, len,
@@ -1545,4 +1572,3 @@ void np_comm_unregister(np_comm_cb_t *cb)
     if (np_comm_cb == cb)
         np_comm_cb = NULL;
 }
-

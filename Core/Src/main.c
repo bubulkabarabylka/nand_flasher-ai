@@ -20,6 +20,13 @@
 #include "main.h"
 #include "usb_device.h"
 #include "version.h"
+#include "clock.h"
+#include "jtag.h"
+#include "led.h"
+#include "nand_programmer.h"
+#include "uart.h"
+
+void cdc_init(void);
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

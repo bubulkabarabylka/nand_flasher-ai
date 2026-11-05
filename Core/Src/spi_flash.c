@@ -30,7 +30,7 @@
 #define UNDEFINED_CMD 0xFF
 
 HAL_SPI_StateTypeDef state;
-SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi1;
 
 typedef struct __attribute__((__packed__))
 {

@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include <stdio.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -112,12 +113,12 @@ unsigned int stacked_r0;
   printf ("LR [R14] = %x  subroutine call return address\r\n", stacked_lr);
   printf ("PC [R15] = %x  program counter\r\n", stacked_pc);
   printf ("PSR = %x\r\n", stacked_psr);
-  printf ("BFAR = %x\r\n", (*((volatile unsigned long *)(0xE000ED38))));
-  printf ("CFSR = %x\r\n", (*((volatile unsigned long *)(0xE000ED28))));
-  printf ("HFSR = %x\r\n", (*((volatile unsigned long *)(0xE000ED2C))));
-  printf ("DFSR = %x\r\n", (*((volatile unsigned long *)(0xE000ED30))));
-  printf ("AFSR = %x\r\n", (*((volatile unsigned long *)(0xE000ED3C))));
-  printf ("SCB_SHCSR = %x\r\n", SCB->SHCSR);
+  printf ("BFAR = %lx\r\n", (*((volatile unsigned long *)(0xE000ED38))));
+  printf ("CFSR = %lx\r\n", (*((volatile unsigned long *)(0xE000ED28))));
+  printf ("HFSR = %lx\r\n", (*((volatile unsigned long *)(0xE000ED2C))));
+  printf ("DFSR = %lx\r\n", (*((volatile unsigned long *)(0xE000ED30))));
+  printf ("AFSR = %lx\r\n", (*((volatile unsigned long *)(0xE000ED3C))));
+  printf ("SCB_SHCSR = %lx\r\n", SCB->SHCSR);
   
   while (1);
 }
