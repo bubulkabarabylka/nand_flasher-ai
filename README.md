@@ -16,3 +16,16 @@ checks around NAND configuration and address arithmetic:
 
 The firmware remains a raw NAND tool. ECC behavior is still selected by the
 host command and should be tested against the target chip before programming.
+
+## Building
+
+The firmware can be built with PlatformIO:
+
+```sh
+pio run -e stm32f407_nand
+```
+
+Every push to `main` and every pull request runs the same build in GitHub
+Actions. Serial monitor settings are intentionally left to the local
+PlatformIO configuration rather than being fixed to a particular operating
+system port.
